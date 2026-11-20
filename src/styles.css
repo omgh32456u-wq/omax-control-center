@@ -62,3 +62,8 @@ button,.panel,.stat,.nav-item,.table-action,.icon-btn{transition:background-colo
   .content{padding-top:22px}
 }
 @media(prefers-reduced-motion:reduce){.page-transition{animation:none}.nav-item:hover,.quick-list>button:hover{transform:none}}
+
+.generator-grid .lifetime-field{align-content:end;gap:8px}
+.lifetime-control{height:40px;display:flex;align-items:center;gap:9px;padding:0 11px;border:1px solid #2b3b53;border-radius:8px;background:#0a1423;color:#aab8cc;font-weight:500}
+.lifetime-control input{appearance:auto;width:16px;height:16px;margin:0;accent-color:#5688e9}
+.light-shell .lifetime-control{background:#fff;border-color:#d7e0ec;color:#53647c}
