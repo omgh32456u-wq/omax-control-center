@@ -126,7 +126,7 @@ begin
   if new.redeemed_by is not null
      and (old.redeemed_by is distinct from new.redeemed_by) then
     update public.omax_subscriptions as s
-    set tier = new.tier,
+    set tier = case when new.tier = 'premium' then 'premium' else s.tier end,
         updated_at = now()
     where s.id = (
       select candidate.id
