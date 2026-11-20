@@ -181,9 +181,13 @@ function Dashboard({ session, onSignOut }: { session: Session; onSignOut: () => 
     if (name === null) return;
     const note = window.prompt('Internal notes (leave blank to clear):', code.notes ?? '');
     if (note === null) return;
+    const months = window.prompt('Duration in months (1, 2, or 12):', String(code.duration_months));
+    if (months === null || !['1', '2', '12'].includes(months.trim())) return;
+    const nextTier = window.prompt('Tier (standard or premium):', code.tier);
+    if (nextTier === null || !['standard', 'premium'].includes(nextTier.trim().toLowerCase())) return;
     setBusy(true); setError('');
     try {
-      await adminRequest('update_code', { id: code.id, assignedName: name, notes: note });
+      await adminRequest('update_code', { id: code.id, assignedName: name, notes: note, durationMonths: Number(months), tier: nextTier.trim().toLowerCase() });
       setNotice('Code details updated.'); await loadPage('Activation codes');
     } catch (e) { setError(e instanceof Error ? e.message : 'Update failed.'); }
     finally { setBusy(false); }
