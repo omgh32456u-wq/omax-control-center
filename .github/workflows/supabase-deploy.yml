@@ -2,6 +2,11 @@ name: Deploy Supabase backend
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main, feature/supabase-admin-integration]
+    paths:
+      - 'supabase/**'
+      - '.github/workflows/supabase-deploy.yml'
 
 permissions:
   contents: read
