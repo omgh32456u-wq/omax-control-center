@@ -104,7 +104,8 @@ Deno.serve(async (req) => {
       if (!isLifetime && (!Number.isInteger(durationDays) || durationDays < 1 || durationDays > 365)) {
         return json({ error: "Duration must be a whole number between 1 and 365 days, or lifetime." }, 400);
       }
-      const legacyMonths = isLifetime ? 12 : Math.max(1, Math.ceil(durationDays! / 30));
+      // Keep the legacy column within its original supported values; exact validity is stored in duration_days.
+      const legacyMonths = 12;
       const assignedName = typeof body.assignedName === "string" ? body.assignedName.trim().slice(0, 120) : null;
       const notes = typeof body.notes === "string" ? body.notes.trim().slice(0, 500) : null;
       const customCodes = Array.isArray(body.customCodes) ? body.customCodes : [];
@@ -158,7 +159,7 @@ Deno.serve(async (req) => {
         }
         updates.is_lifetime = false;
         updates.duration_days = days;
-        updates.duration_months = Math.max(1, Math.ceil(days / 30));
+        updates.duration_months = 12;
       }
       if (["standard", "premium"].includes(body.tier)) updates.tier = body.tier;
       if (typeof body.isActive === "boolean") updates.is_active = body.isActive;
