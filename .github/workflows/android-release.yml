@@ -29,13 +29,9 @@ jobs:
 
       - name: Build web application
         env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_SUPABASE_URL: https://biwcwwxsauineaowreot.supabase.co
+          VITE_SUPABASE_ANON_KEY: sb_publishable_qDAFSNM5vXuEFEh6ma7Xaw_Se8DCQQu
         run: |
-          if [ -z "$VITE_SUPABASE_URL" ] || [ -z "$VITE_SUPABASE_ANON_KEY" ]; then
-            echo "::error::Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY as GitHub Actions secrets."
-            exit 1
-          fi
           npm run build
 
       - name: Set up Java
