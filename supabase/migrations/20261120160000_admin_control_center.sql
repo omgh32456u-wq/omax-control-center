@@ -95,7 +95,7 @@ returns trigger
 language plpgsql
 security definer
 set search_path = ''
-as $
+as $omax$
 begin
   if new.redeemed_by is not null
      and (old.redeemed_by is distinct from new.redeemed_by) then
@@ -114,7 +114,7 @@ begin
   end if;
   return new;
 end;
-$;
+$omax$;
 
 drop trigger if exists omax_activation_codes_apply_redeemed_tier
   on public.omax_activation_codes;
