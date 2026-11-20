@@ -23,7 +23,7 @@ type SubscriptionRow = {
 type UserRow = {
   id: string; email?: string; createdAt: string;
   profile: { display_name: string | null } | null;
-  subscription: { status: string; tier: string; expires_at: string } | null;
+  subscription: { status: string; tier: string; expires_at: string; is_lifetime?: boolean } | null;
 };
 type AuditRow = {
   id: number; actor_user_id: string | null; target_user_id: string | null;
@@ -309,7 +309,7 @@ function Dashboard({ session, onSignOut }: { session: Session; onSignOut: () => 
 
         {page === 'Users' && <><div className="table-toolbar"><div><h2>Registered users</h2><p>Latest 100 accounts</p></div><div className="search-box"><Search size={15}/><input placeholder="Search email, name, ID…" value={search} onChange={e => setSearch(e.target.value)} /></div></div>
           <div className="table-wrap"><table><thead><tr><th>User</th><th>Created</th><th>Subscription</th><th>Tier</th><th>Expires</th></tr></thead><tbody>
-            {filteredUsers.map(user => <tr key={user.id}><td><strong>{user.profile?.display_name || user.email || 'User'}</strong><small>{user.email || user.id}</small></td><td>{date(user.createdAt)}</td><td>{user.subscription?.status || 'None'}</td><td>{user.subscription?.tier || '—'}</td><td>{date(user.subscription?.expires_at)}</td></tr>)}
+            {filteredUsers.map(user => <tr key={user.id}><td><strong>{user.profile?.display_name || user.email || 'User'}</strong><small>{user.email || user.id}</small></td><td>{date(user.createdAt)}</td><td>{user.subscription?.status || 'None'}</td><td>{user.subscription?.tier || '—'}</td><td>{user.subscription?.is_lifetime ? 'Lifetime' : date(user.subscription?.expires_at)}</td></tr>)}
             {filteredUsers.length === 0 && <tr><td colSpan={5} className="empty-cell">No users found.</td></tr>}</tbody></table></div></>}
 
         {page === 'Activity log' && <div className="table-wrap"><table><thead><tr><th>Action</th><th>Actor</th><th>Target</th><th>Details</th><th>Date</th></tr></thead><tbody>
