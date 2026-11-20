@@ -12,13 +12,13 @@ import { adminRequest } from './lib/adminApi';
 type AccessState = 'checking' | 'allowed' | 'denied' | 'error';
 type Page = 'Overview' | 'Activation codes' | 'Subscriptions' | 'Users' | 'Activity log' | 'Settings';
 type CodeRow = {
-  id: string; assigned_name: string | null; notes: string | null; duration_months: number;
+  id: string; assigned_name: string | null; notes: string | null; duration_months: number; duration_days?: number | null; is_lifetime?: boolean;
   tier: 'standard' | 'premium'; is_active: boolean; redeemed_by: string | null;
   redeemed_at: string | null; redeemed_by_name?: string | null; created_at: string;
 };
 type SubscriptionRow = {
   id: string; user_id: string; display_name: string | null; status: string;
-  tier: string; starts_at: string; expires_at: string; created_at: string;
+  tier: string; starts_at: string; expires_at: string; is_lifetime?: boolean; created_at: string;
 };
 type UserRow = {
   id: string; email?: string; createdAt: string;
@@ -127,7 +127,8 @@ function Dashboard({ session, onSignOut }: { session: Session; onSignOut: () => 
   const [users, setUsers] = useState<UserRow[]>([]);
   const [logs, setLogs] = useState<AuditRow[]>([]);
   const [count, setCount] = useState('1');
-  const [duration, setDuration] = useState('1');
+  const [durationDays, setDurationDays] = useState('30');
+  const [lifetime, setLifetime] = useState(false);
   const [tier, setTier] = useState<'standard' | 'premium'>('standard');
   const [assignedName, setAssignedName] = useState('');
   const [notes, setNotes] = useState('');
@@ -166,7 +167,7 @@ function Dashboard({ session, onSignOut }: { session: Session; onSignOut: () => 
     event.preventDefault(); setBusy(true); setError(''); setNotice(''); setGeneratedCodes([]);
     try {
       const data = await adminRequest<{ codes: string[] }>('generate_codes', {
-        count: customCode.trim() ? 1 : Number(count), durationMonths: Number(duration), tier, assignedName, notes,
+        count: customCode.trim() ? 1 : Number(count), durationDays: Number(durationDays), isLifetime: lifetime, tier, assignedName, notes,
         ...(customCode.trim() ? { customCodes: [customCode.trim()] } : {}),
       });
       setGeneratedCodes(data.codes ?? []); setCustomCode('');
@@ -181,13 +182,18 @@ function Dashboard({ session, onSignOut }: { session: Session; onSignOut: () => 
     if (name === null) return;
     const note = window.prompt('Internal notes (leave blank to clear):', code.notes ?? '');
     if (note === null) return;
-    const months = window.prompt('Duration in months (1, 2, or 12):', String(code.duration_months));
-    if (months === null || !['1', '2', '12'].includes(months.trim())) return;
+    const durationInput = window.prompt('Duration in days (1–365), or type lifetime:', code.is_lifetime ? 'lifetime' : String(code.duration_days ?? code.duration_months * 30));
+    if (durationInput === null) return;
+    const nextLifetime = durationInput.trim().toLowerCase() === 'lifetime';
+    const nextDays = Number(durationInput.trim());
+    if (!nextLifetime && (!Number.isInteger(nextDays) || nextDays < 1 || nextDays > 365)) {
+      setError('Duration must be 1–365 days, or lifetime.'); return;
+    }
     const nextTier = window.prompt('Tier (standard or premium):', code.tier);
     if (nextTier === null || !['standard', 'premium'].includes(nextTier.trim().toLowerCase())) return;
     setBusy(true); setError('');
     try {
-      await adminRequest('update_code', { id: code.id, assignedName: name, notes: note, durationMonths: Number(months), tier: nextTier.trim().toLowerCase() });
+      await adminRequest('update_code', { id: code.id, assignedName: name, notes: note, durationDays: nextDays, isLifetime: nextLifetime, tier: nextTier.trim().toLowerCase() });
       setNotice('Code details updated.'); await loadPage('Activation codes');
     } catch (e) { setError(e instanceof Error ? e.message : 'Update failed.'); }
     finally { setBusy(false); }
@@ -281,7 +287,8 @@ function Dashboard({ session, onSignOut }: { session: Session; onSignOut: () => 
             <div className="panel-head"><div><h2>Generate activation codes</h2><p>Cryptographically random codes; only hashes are stored in the database.</p></div><KeyRound size={19}/></div>
             <form className="generator-grid" onSubmit={generate}>
               <label>Quantity<input type="number" min="1" max="100" value={count} onChange={e => setCount(e.target.value)} required /></label>
-              <label>Duration<select value={duration} onChange={e => setDuration(e.target.value)}><option value="1">1 month</option><option value="2">2 months</option><option value="12">12 months</option></select></label>
+              <label>Duration (days)<input type="number" min="1" max="365" value={durationDays} onChange={e => setDurationDays(e.target.value)} disabled={lifetime} required={!lifetime} /></label>
+              <label className="lifetime-field"><span>Lifetime access</span><span className="lifetime-control"><input type="checkbox" checked={lifetime} onChange={e => setLifetime(e.target.checked)} /> No expiration</span></label>
               <label>Subscription tier<select value={tier} onChange={e => setTier(e.target.value as 'standard' | 'premium')}><option value="standard">Standard</option><option value="premium">Premium</option></select></label>
               <label>Assigned to<input value={assignedName} onChange={e => setAssignedName(e.target.value)} maxLength={120} placeholder="Optional person / customer name" /></label>
               <label>Custom code (optional)<input value={customCode} onChange={e => setCustomCode(e.target.value.toUpperCase())} maxLength={48} placeholder="Leave empty for random" /></label>
@@ -292,12 +299,12 @@ function Dashboard({ session, onSignOut }: { session: Session; onSignOut: () => 
           </section>
           <div className="table-toolbar"><div><h2>Code inventory</h2><p>Up to 250 latest codes</p></div><div className="search-box"><Search size={15}/><input placeholder="Search name, ID, tier…" value={search} onChange={e => setSearch(e.target.value)} /></div></div>
           <div className="table-wrap"><table><thead><tr><th>Assigned to</th><th>Tier</th><th>Duration</th><th>Status</th><th>Created</th><th>Redeemed by</th><th>Redeemed at</th><th>Actions</th></tr></thead>
-            <tbody>{filteredCodes.map(code => <tr key={code.id}><td><strong>{code.assigned_name || 'Unassigned'}</strong><small>{code.id.slice(0, 8)}…</small></td><td><span className={`pill ${code.tier}`}>{code.tier}</span></td><td>{code.duration_months} mo.</td><td><span className={`pill ${code.redeemed_by ? 'used' : code.is_active ? 'active' : 'disabled'}`}>{code.redeemed_by ? 'Used' : code.is_active ? 'Available' : 'Disabled'}</span></td><td>{date(code.created_at)}</td><td>{code.redeemed_by ? (code.redeemed_by_name || code.redeemed_by.slice(0, 12) + '…') : '—'}</td><td>{date(code.redeemed_at)}</td><td><button className="table-action" onClick={() => void updateCode(code)} title="Edit metadata" disabled={!!code.redeemed_by}><Pencil size={14}/></button><button className="table-action" onClick={() => void toggleCode(code)} title={code.is_active ? 'Deactivate' : 'Activate'} disabled={!!code.redeemed_by}><Ban size={14}/></button></td></tr>)}
+            <tbody>{filteredCodes.map(code => <tr key={code.id}><td><strong>{code.assigned_name || 'Unassigned'}</strong><small>{code.id.slice(0, 8)}…</small></td><td><span className={`pill ${code.tier}`}>{code.tier}</span></td><td>{code.is_lifetime ? 'Lifetime' : code.duration_days ? `${code.duration_days} days` : `${code.duration_months} mo.`}</td><td><span className={`pill ${code.redeemed_by ? 'used' : code.is_active ? 'active' : 'disabled'}`}>{code.redeemed_by ? 'Used' : code.is_active ? 'Available' : 'Disabled'}</span></td><td>{date(code.created_at)}</td><td>{code.redeemed_by ? (code.redeemed_by_name || code.redeemed_by.slice(0, 12) + '…') : '—'}</td><td>{date(code.redeemed_at)}</td><td><button className="table-action" onClick={() => void updateCode(code)} title="Edit metadata" disabled={!!code.redeemed_by}><Pencil size={14}/></button><button className="table-action" onClick={() => void toggleCode(code)} title={code.is_active ? 'Deactivate' : 'Activate'} disabled={!!code.redeemed_by}><Ban size={14}/></button></td></tr>)}
             {filteredCodes.length === 0 && <tr><td colSpan={8} className="empty-cell">No activation codes found.</td></tr>}</tbody></table></div>
         </>}
 
         {page === 'Subscriptions' && <div className="table-wrap"><table><thead><tr><th>User</th><th>Tier</th><th>Status</th><th>Start</th><th>Expires</th><th>Actions</th></tr></thead><tbody>
-          {subscriptions.map(row => <tr key={row.id}><td><strong>{row.display_name || 'User'}</strong><small>{row.user_id.slice(0, 12)}…</small></td><td><span className={`pill ${row.tier}`}>{row.tier}</span></td><td><span className={`pill ${row.status}`}>{row.status}</span></td><td>{date(row.starts_at)}</td><td>{date(row.expires_at)}</td><td><button className="table-action danger" title="Revoke subscription" disabled={row.status !== 'active'} onClick={() => void revokeSubscription(row)}><Ban size={14}/></button></td></tr>)}
+          {subscriptions.map(row => <tr key={row.id}><td><strong>{row.display_name || 'User'}</strong><small>{row.user_id.slice(0, 12)}…</small></td><td><span className={`pill ${row.tier}`}>{row.tier}</span></td><td><span className={`pill ${row.status}`}>{row.status}</span></td><td>{date(row.starts_at)}</td><td>{row.is_lifetime ? 'Lifetime' : date(row.expires_at)}</td><td><button className="table-action danger" title="Revoke subscription" disabled={row.status !== 'active'} onClick={() => void revokeSubscription(row)}><Ban size={14}/></button></td></tr>)}
           {subscriptions.length === 0 && <tr><td colSpan={6} className="empty-cell">No subscriptions found.</td></tr>}</tbody></table></div>}
 
         {page === 'Users' && <><div className="table-toolbar"><div><h2>Registered users</h2><p>Latest 100 accounts</p></div><div className="search-box"><Search size={15}/><input placeholder="Search email, name, ID…" value={search} onChange={e => setSearch(e.target.value)} /></div></div>
