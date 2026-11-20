@@ -36,7 +36,7 @@ begin
 end;
 $audit_id$;
 
-do $
+do $constraints$
 begin
   if not exists (
     select 1 from pg_constraint
@@ -78,7 +78,7 @@ begin
       check (notes is null or char_length(notes) <= 500);
   end if;
 end;
-$;
+$constraints$;
 
 -- Preserve the existing redemption RPC implementation. It already writes
 -- activation_code_id into the subscription; this trigger copies that code's tier.
