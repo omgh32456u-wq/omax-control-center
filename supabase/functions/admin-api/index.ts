@@ -129,7 +129,7 @@ Deno.serve(async (req) => {
         created_by: userData.user.id,
       })));
       const { data, error } = await admin.from("omax_activation_codes")
-        .insert(rows).select("id, assigned_name, duration_months, tier, created_at");
+        .insert(rows).select("id, assigned_name, duration_months, duration_days, is_lifetime, tier, created_at");
       if (error) {
         if (error.code === "23505") return json({ error: "A code already exists. Generate a new one and retry." }, 409);
         throw error;
@@ -197,7 +197,7 @@ Deno.serve(async (req) => {
       const ids = authData.users.map((u) => u.id);
       const [profiles, subscriptions] = await Promise.all([
         ids.length ? admin.from("omax_profiles").select("user_id, display_name, created_at").in("user_id", ids) : Promise.resolve({ data: [], error: null }),
-        ids.length ? admin.from("omax_subscriptions").select("user_id, status, tier, expires_at").in("user_id", ids).order("expires_at", { ascending: false }) : Promise.resolve({ data: [], error: null }),
+        ids.length ? admin.from("omax_subscriptions").select("user_id, status, tier, expires_at, is_lifetime").in("user_id", ids).order("expires_at", { ascending: false }) : Promise.resolve({ data: [], error: null }),
       ]);
       if (profiles.error) throw profiles.error;
       if (subscriptions.error) throw subscriptions.error;
