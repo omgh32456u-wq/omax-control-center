@@ -1,0 +1,8 @@
+{
+  "appId": "com.omax.controlcenter",
+  "appName": "Omax Control Center",
+  "webDir": "dist",
+  "android": {
+    "allowMixedContent": false
+  }
+}
