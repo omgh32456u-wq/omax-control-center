@@ -33,7 +33,7 @@ begin
       false
     );
   end if;
-end
+end;
 $audit_id$;
 
 do $
@@ -77,8 +77,8 @@ begin
       add constraint omax_activation_codes_notes_length
       check (notes is null or char_length(notes) <= 500);
   end if;
-end
-$$;
+end;
+$;
 
 -- Preserve the existing redemption RPC implementation. It already writes
 -- activation_code_id into the subscription; this trigger copies that code's tier.
