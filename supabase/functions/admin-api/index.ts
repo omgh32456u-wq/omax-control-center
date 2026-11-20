@@ -82,8 +82,15 @@ Deno.serve(async (req) => {
     }
 
     if (action === "generate_codes") {
-      const count = Math.max(1, Math.min(100, Number(body.count ?? 1)));
+      const requestedCount = Number(body.count ?? 1);
+      if (!Number.isInteger(requestedCount) || requestedCount < 1 || requestedCount > 100) {
+        return json({ error: "Quantity must be a whole number between 1 and 100." }, 400);
+      }
+      const count = requestedCount;
       const duration = Number(body.durationMonths ?? 1);
+      if (body.tier !== undefined && !["standard", "premium"].includes(body.tier)) {
+        return json({ error: "Tier must be standard or premium." }, 400);
+      }
       const tier = body.tier === "premium" ? "premium" : "standard";
       if (![1, 2, 12].includes(duration)) return json({ error: "Duration must be 1, 2, or 12 months." }, 400);
       const assignedName = typeof body.assignedName === "string" ? body.assignedName.trim().slice(0, 120) : null;
