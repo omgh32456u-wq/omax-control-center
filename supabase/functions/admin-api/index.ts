@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
 
     if (action === "list_codes") {
       const { data, error } = await admin.from("omax_activation_codes")
-        .select("id, assigned_name, notes, duration_months, tier, is_active, redeemed_by, redeemed_at, created_at")
+        .select("id, assigned_name, notes, duration_months, duration_days, is_lifetime, tier, is_active, redeemed_by, redeemed_at, created_at")
         .order("created_at", { ascending: false }).limit(250);
       if (error) throw error;
       const redeemerIds = [...new Set((data ?? []).map((row) => row.redeemed_by).filter((id): id is string => Boolean(id)))];
@@ -95,12 +95,16 @@ Deno.serve(async (req) => {
         return json({ error: "Quantity must be a whole number between 1 and 100." }, 400);
       }
       const count = requestedCount;
-      const duration = Number(body.durationMonths ?? 1);
+      const isLifetime = body.isLifetime === true;
+      const durationDays = isLifetime ? null : Number(body.durationDays ?? 30);
       if (body.tier !== undefined && !["standard", "premium"].includes(body.tier)) {
         return json({ error: "Tier must be standard or premium." }, 400);
       }
       const tier = body.tier === "premium" ? "premium" : "standard";
-      if (![1, 2, 12].includes(duration)) return json({ error: "Duration must be 1, 2, or 12 months." }, 400);
+      if (!isLifetime && (!Number.isInteger(durationDays) || durationDays < 1 || durationDays > 365)) {
+        return json({ error: "Duration must be a whole number between 1 and 365 days, or lifetime." }, 400);
+      }
+      const legacyMonths = isLifetime ? 12 : Math.max(1, Math.ceil(durationDays! / 30));
       const assignedName = typeof body.assignedName === "string" ? body.assignedName.trim().slice(0, 120) : null;
       const notes = typeof body.notes === "string" ? body.notes.trim().slice(0, 500) : null;
       const customCodes = Array.isArray(body.customCodes) ? body.customCodes : [];
@@ -116,7 +120,9 @@ Deno.serve(async (req) => {
       if (new Set(plainCodes).size !== plainCodes.length) return json({ error: "Duplicate codes in batch." }, 400);
       const rows = await Promise.all(plainCodes.map(async (code) => ({
         code_hash: await hashCode(code),
-        duration_months: duration,
+        duration_months: legacyMonths,
+        duration_days: durationDays,
+        is_lifetime: isLifetime,
         tier,
         assigned_name: assignedName,
         notes,
@@ -131,7 +137,7 @@ Deno.serve(async (req) => {
       await admin.from("omax_audit_logs").insert(plainCodes.map((_, i) => ({
         actor_user_id: userData.user.id,
         action: "activation_code_created",
-        metadata: { activation_code_id: data?.[i]?.id, tier, duration_months: duration },
+        metadata: { activation_code_id: data?.[i]?.id, tier, duration_days: durationDays, is_lifetime: isLifetime },
       })));
       return json({ codes: plainCodes, records: data ?? [], revealOnce: true }, 201);
     }
@@ -141,12 +147,24 @@ Deno.serve(async (req) => {
       const updates: Record<string, unknown> = {};
       if (typeof body.assignedName === "string") updates.assigned_name = body.assignedName.trim().slice(0, 120) || null;
       if (typeof body.notes === "string") updates.notes = body.notes.trim().slice(0, 500) || null;
-      if ([1, 2, 12].includes(Number(body.durationMonths))) updates.duration_months = Number(body.durationMonths);
+      if (body.isLifetime === true) {
+        updates.is_lifetime = true;
+        updates.duration_days = null;
+        updates.duration_months = 12;
+      } else if (body.isLifetime === false || body.durationDays !== undefined) {
+        const days = Number(body.durationDays);
+        if (!Number.isInteger(days) || days < 1 || days > 365) {
+          return json({ error: "Duration must be a whole number between 1 and 365 days, or lifetime." }, 400);
+        }
+        updates.is_lifetime = false;
+        updates.duration_days = days;
+        updates.duration_months = Math.max(1, Math.ceil(days / 30));
+      }
       if (["standard", "premium"].includes(body.tier)) updates.tier = body.tier;
       if (typeof body.isActive === "boolean") updates.is_active = body.isActive;
       const { data, error } = await admin.from("omax_activation_codes").update(updates)
         .eq("id", id).is("redeemed_by", null)
-        .select("id, assigned_name, notes, duration_months, tier, is_active").maybeSingle();
+        .select("id, assigned_name, notes, duration_months, duration_days, is_lifetime, tier, is_active").maybeSingle();
       if (error) throw error;
       if (!data) return json({ error: "Code not found or already redeemed." }, 404);
       await admin.from("omax_audit_logs").insert({
@@ -158,7 +176,7 @@ Deno.serve(async (req) => {
 
     if (action === "list_subscriptions") {
       const { data, error } = await admin.from("omax_subscriptions")
-        .select("id, user_id, activation_code_id, status, tier, starts_at, expires_at, created_at")
+        .select("id, user_id, activation_code_id, status, tier, starts_at, expires_at, is_lifetime, created_at")
         .order("created_at", { ascending: false }).limit(250);
       if (error) throw error;
       const ids = [...new Set((data ?? []).map((row) => row.user_id))];
