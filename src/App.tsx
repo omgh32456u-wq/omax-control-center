@@ -324,6 +324,7 @@ function App() {
 
   async function verifyAdmin(currentSession: Session) {
     if (!supabase) return;
+    setSession(currentSession);
     setAccess('checking'); setChecking(true);
     const { data, error } = await supabase.rpc('omax_is_admin');
     setChecking(false);
