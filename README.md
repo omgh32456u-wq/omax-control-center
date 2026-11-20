@@ -30,7 +30,7 @@ The Edge Function validates the signed-in user's JWT and calls `omax_is_admin()`
 
 The Android workflow already uses the project's public Supabase URL and publishable key at build time. These values are intended to be embedded in a client app; they are not service-role credentials.
 
-The workflow builds an installable debug APK and an unsigned release APK. A stable, signed release suitable for future in-place updates requires a persistent Android signing keystore and corresponding GitHub secrets. Never generate a new signing key for every release.
+The workflow builds an installable debug APK and an unsigned release APK. A stable, signed release suitable for future in-place updates requires these GitHub Actions secrets: `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, and `ANDROID_KEY_PASSWORD`. Without them, Actions still produces an installable debug APK plus an unsigned release APK. Never generate a new signing key for every release.
 
 The manual Supabase deployment workflow requires repository Actions secrets `SUPABASE_ACCESS_TOKEN` and `SUPABASE_DB_PASSWORD`.
 
