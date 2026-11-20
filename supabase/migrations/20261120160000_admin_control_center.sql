@@ -87,4 +87,42 @@ on public.omax_subscriptions
 for each row
 execute function public.omax_set_subscription_tier_from_code();
 
+-- The existing redemption RPC extends an existing subscription without replacing
+-- activation_code_id. Once it marks the new code as redeemed, propagate that code's
+-- tier to the user's current active subscription as well.
+create or replace function public.omax_apply_redeemed_code_tier()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $
+begin
+  if new.redeemed_by is not null
+     and (old.redeemed_by is distinct from new.redeemed_by) then
+    update public.omax_subscriptions as s
+    set tier = new.tier,
+        updated_at = now()
+    where s.id = (
+      select candidate.id
+      from public.omax_subscriptions as candidate
+      where candidate.user_id = new.redeemed_by
+        and candidate.status = 'active'
+        and candidate.expires_at > now()
+      order by candidate.expires_at desc, candidate.created_at desc
+      limit 1
+    );
+  end if;
+  return new;
+end;
+$;
+
+drop trigger if exists omax_activation_codes_apply_redeemed_tier
+  on public.omax_activation_codes;
+
+create trigger omax_activation_codes_apply_redeemed_tier
+after update of redeemed_by
+on public.omax_activation_codes
+for each row
+execute function public.omax_apply_redeemed_code_tier();
+
 commit;
