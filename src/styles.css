@@ -8,3 +8,57 @@
 .table-toolbar{display:flex;justify-content:space-between;align-items:center;gap:14px;margin:24px 0 12px}.table-toolbar h2{font-size:14px;margin:0 0 4px}.table-toolbar p{font-size:10px;color:#8190a7;margin:0}.search-box{display:flex;align-items:center;gap:8px;border:1px solid #2b3b53;border-radius:8px;padding:0 10px;height:36px;color:#8092ac;min-width:220px}.search-box input{border:0;outline:0;background:transparent;color:#eaf1fc;font:inherit;font-size:11px;width:100%}.table-wrap{width:100%;overflow:auto;border:1px solid #243249;border-radius:11px;background:#101a2a}.table-wrap table{width:100%;border-collapse:collapse;min-width:760px;text-align:left}.table-wrap th{font-size:10px;color:#8191a9;font-weight:600;letter-spacing:.3px;background:#142137}.table-wrap th,.table-wrap td{padding:13px 14px;border-bottom:1px solid #202d40;white-space:nowrap}.table-wrap td{font-size:11px;color:#b9c6d8}.table-wrap td strong,.table-wrap td small{display:block}.table-wrap td strong{font-size:11px;color:#e2eaf5}.table-wrap td small{font-size:9px;color:#71819a;margin-top:4px}.table-wrap tr:last-child td{border-bottom:0}.table-wrap code{display:block;max-width:260px;overflow:hidden;text-overflow:ellipsis;color:#93a9c8;font-size:9px}.pill{display:inline-flex;align-items:center;border-radius:20px;padding:4px 8px;font-size:9px;text-transform:capitalize;background:#26364d;color:#b7c7df}.pill.premium{background:#4a3b21;color:#f0c879}.pill.standard{background:#203d5a;color:#91c4ff}.pill.active,.pill.available{background:#1d4739;color:#82d7b1}.pill.used,.pill.revoked{background:#4a2b34;color:#f0a2ad}.pill.disabled,.pill.expired{background:#3a3d45;color:#aeb7c4}.table-action{width:28px;height:28px;margin-right:5px;display:inline-grid;place-items:center;border:1px solid #30415a;border-radius:7px;background:transparent;color:#9fb4d2}.table-action:disabled{opacity:.3;cursor:not-allowed}.table-action.danger{color:#f09aa5;border-color:#69404a}.empty-cell{text-align:center!important;padding:28px!important;color:#7f8ea5!important}.loading-inline{display:flex;align-items:center;gap:8px;color:#91a9c9;font-size:11px;margin:-12px 0 15px}.error-notice{border-color:#70434a;background:#51283244;color:#f0a0a8}.error-notice p{color:#d7a6ac}.success-notice{border-color:#386b5c;background:#12312655;color:#9be2c1}.settings-panel{max-width:760px}.settings-panel .secondary-action{margin-top:18px}.light-shell{background:#f3f6fb;color:#17243a}.light-shell .sidebar{background:#fff;border-color:#dce4ef}.light-shell .topbar{border-color:#dce4ef}.light-shell .nav-item{color:#5d6d84}.light-shell .nav-item.active{background:#e9f0ff;color:#244d9b}.light-shell .crumb,.light-shell .panel-head h2,.light-shell .quick-list>button strong{color:#17243a}.light-shell .stat,.light-shell .panel,.light-shell .table-wrap{background:#fff;border-color:#dce4ef}.light-shell .stat>span,.light-shell .subtitle,.light-shell .table-toolbar p{color:#66758b}.light-shell .stat>strong{color:#17243a}.light-shell .table-wrap th{background:#edf2f8;color:#5d6d84}.light-shell .table-wrap td{color:#40516b;border-color:#e4eaf2}.light-shell .table-wrap td strong{color:#1d2b43}.light-shell .table-wrap td small{color:#738198}.light-shell .quick-list>button{border-color:#e4eaf2}.light-shell .quick-list>button small{color:#738198}.light-shell .health-row{color:#40516b;border-color:#e4eaf2}.light-shell .health-foot,.light-shell footer{color:#738198}
 @media(max-width:900px){.generator-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:640px){.generator-grid{grid-template-columns:1fr}.generator-grid .wide-field{grid-column:auto}.table-toolbar{align-items:flex-start;flex-direction:column}.search-box{width:100%}.generated-box>div{align-items:flex-start;flex-direction:column}.table-wrap{border-radius:8px}}
+
+
+/* Omax logo, safe areas, and refined page motion */
+.brand-mark{overflow:hidden;background:#05070b;border:1px solid rgba(255,255,255,.12);border-radius:11px}
+.brand-mark img{display:block;width:100%;height:100%;object-fit:contain;padding:3px}
+.auth-brand .brand-mark{width:42px;height:42px}
+.shell,.auth-shell{padding-top:env(safe-area-inset-top, 0px)}
+.shell{min-height:100dvh}
+.auth-shell{min-height:100dvh}
+.page-transition{animation:omax-page-enter .24s ease-out both}
+@keyframes omax-page-enter{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+button,.panel,.stat,.nav-item,.table-action,.icon-btn{transition:background-color .18s ease,border-color .18s ease,color .18s ease,box-shadow .18s ease,transform .18s ease}
+.nav-item:hover,.quick-list>button:hover{transform:translateX(2px)}
+.light-shell .brand-mark{border-color:#d8e0ec;box-shadow:0 4px 14px #17243a18}
+.light-shell .workspace-label,.light-shell .eyebrow{color:#647b9e}
+.light-shell .brand span,.light-shell .profile span{color:#718198}
+.light-shell .profile strong,.light-shell .brand strong{color:#17243a}
+.light-shell .secure-note{color:#64748b;border-color:#e2e8f0}
+.light-shell .secure-note svg{color:#16835f}
+.light-shell .status{color:#53647c}
+.light-shell .icon-btn,.light-shell .table-action,.light-shell .secondary-action{color:#52637c;border-color:#d7e0ec;background:#fff}
+.light-shell .icon-btn:hover,.light-shell .table-action:hover,.light-shell .secondary-action:hover{background:#edf3fb}
+.light-shell .generator-grid label{color:#53647c}
+.light-shell .generator-grid input,.light-shell .generator-grid select{background:#fff;color:#17243a;border-color:#d7e0ec}
+.light-shell .generator-grid input::placeholder,.light-shell .search-box input::placeholder{color:#8a98aa}
+.light-shell .search-box{border-color:#d7e0ec;background:#fff;color:#687b95}
+.light-shell .search-box input{color:#17243a}
+.light-shell .panel-head{color:#65758d}
+.light-shell .panel-head p{color:#74839a}
+.light-shell .health-row b{color:#8b6428}
+.light-shell .health-row b.good{color:#16835f}
+.light-shell .table-wrap code{color:#526c92}
+.light-shell .table-action.danger{color:#c24b5b;border-color:#e7cbd0}
+.light-shell .pill{background:#edf2f8;color:#52637a}
+.light-shell .pill.premium{background:#fff2d7;color:#8a5a08}
+.light-shell .pill.standard{background:#e4efff;color:#315d9b}
+.light-shell .pill.active,.light-shell .pill.available{background:#def5e9;color:#176b4d}
+.light-shell .pill.used,.light-shell .pill.revoked{background:#fde8eb;color:#a43c4b}
+.light-shell .pill.disabled,.light-shell .pill.expired{background:#e9edf2;color:#687487}
+.light-shell .generated-box{background:#effaf4;border-color:#b8e4ce}
+.light-shell .generated-box strong{color:#176b4d}
+.light-shell .generated-box pre{background:#e0f4e9;color:#14583f}
+.light-shell .generated-box small{color:#4b8067}
+.light-shell .success-notice{background:#effaf4;border-color:#b8e4ce;color:#176b4d}
+.light-shell .success-notice p{color:#3f765e}
+.light-shell .error-notice{background:#fff2f2;border-color:#efc8cc;color:#a43c4b}
+.light-shell .error-notice p{color:#92545c}
+@media(max-width:640px){
+  .shell{padding-top:env(safe-area-inset-top, 0px)}
+  .sidebar{padding-top:max(12px, env(safe-area-inset-top, 0px))}
+  .topbar{height:54px}
+  .content{padding-top:22px}
+}
+@media(prefers-reduced-motion:reduce){.page-transition{animation:none}.nav-item:hover,.quick-list>button:hover{transform:none}}
