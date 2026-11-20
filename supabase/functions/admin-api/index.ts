@@ -1,3 +1,4 @@
+// Admin API: activation durations are applied by the database subscription trigger.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.0";
 
 const corsHeaders = {
