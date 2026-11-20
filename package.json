@@ -15,7 +15,8 @@
     "react-dom": "latest",
     "lucide-react": "latest",
     "@supabase/supabase-js": "^2.57.0",
-    "@capacitor/core": "^7.4.3"
+    "@capacitor/core": "^7.4.3",
+    "@capacitor/android": "^7.4.3"
   },
   "devDependencies": {
     "@types/react": "latest",
