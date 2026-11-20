@@ -1,5 +1,7 @@
 -- Omax Control Center admin metadata and subscription tiers.
--- Existing activation codes and subscriptions are preserved.
+-- Existing activation code hashes, subscription rows, and redemption RPC are preserved.
+begin;
+
 alter table public.omax_activation_codes
   add column if not exists assigned_name text,
   add column if not exists notes text,
@@ -8,7 +10,7 @@ alter table public.omax_activation_codes
 alter table public.omax_subscriptions
   add column if not exists tier text not null default 'standard';
 
-do $$
+do $constraints$
 begin
   if not exists (
     select 1 from pg_constraint
@@ -29,14 +31,30 @@ begin
       add constraint omax_subscriptions_tier_check
       check (tier in ('standard', 'premium'));
   end if;
-end $;
 
-alter table public.omax_activation_codes
-  add constraint omax_activation_codes_assigned_name_length
-    check (assigned_name is null or char_length(assigned_name) <= 120),
-  add constraint omax_activation_codes_notes_length
-    check (notes is null or char_length(notes) <= 500);
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'omax_activation_codes_assigned_name_length'
+      and conrelid = 'public.omax_activation_codes'::regclass
+  ) then
+    alter table public.omax_activation_codes
+      add constraint omax_activation_codes_assigned_name_length
+      check (assigned_name is null or char_length(assigned_name) <= 120);
+  end if;
 
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'omax_activation_codes_notes_length'
+      and conrelid = 'public.omax_activation_codes'::regclass
+  ) then
+    alter table public.omax_activation_codes
+      add constraint omax_activation_codes_notes_length
+      check (notes is null or char_length(notes) <= 500);
+  end if;
+end;
+$constraints$;
+
+-- Give audit events a generated ID only if the existing table has no default/identity.
 do $audit_id$
 declare
   v_default text;
@@ -68,15 +86,15 @@ create index if not exists omax_subscriptions_status_expires_idx
 create index if not exists omax_audit_logs_created_at_idx
   on public.omax_audit_logs (created_at desc);
 
--- The existing redemption RPC writes an audit event after applying a code.
--- This trigger copies the redeemed code's tier onto the resulting active subscription,
--- without replacing or weakening the existing redemption RPC's locking/validation logic.
+-- The existing redemption RPC records activation_code_id in this audit event.
+-- This trigger applies Premium to the active subscription without replacing the
+-- original RPC's validation, locking, expiry, or code-hashing logic.
 create or replace function public.omax_apply_redeemed_code_tier()
 returns trigger
 language plpgsql
 security definer
 set search_path = ''
-as $$
+as $apply_tier$
 declare
   v_user_id uuid;
   v_code_id uuid;
@@ -98,18 +116,19 @@ begin
   end if;
 
   select c.tier into v_tier
-  from public.omax_activation_codes c
+  from public.omax_activation_codes as c
   where c.id = v_code_id;
 
   if v_tier not in ('standard', 'premium') then
     return new;
   end if;
 
-  update public.omax_subscriptions s
-  set tier = case when v_tier = 'premium' then 'premium' else s.tier end, updated_at = now()
+  update public.omax_subscriptions as s
+  set tier = case when v_tier = 'premium' then 'premium' else s.tier end,
+      updated_at = now()
   where s.id = (
     select s2.id
-    from public.omax_subscriptions s2
+    from public.omax_subscriptions as s2
     where s2.user_id = v_user_id
       and s2.status = 'active'
       and s2.expires_at > now()
@@ -119,7 +138,7 @@ begin
 
   return new;
 end;
-$$;
+$apply_tier$;
 
 drop trigger if exists omax_apply_redeemed_code_tier_trigger
   on public.omax_audit_logs;
@@ -129,3 +148,5 @@ after insert on public.omax_audit_logs
 for each row
 when (new.action = 'activation_code_redeemed')
 execute function public.omax_apply_redeemed_code_tier();
+
+commit;
