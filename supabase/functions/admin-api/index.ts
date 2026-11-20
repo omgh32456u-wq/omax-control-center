@@ -78,7 +78,15 @@ Deno.serve(async (req) => {
         .select("id, assigned_name, notes, duration_months, tier, is_active, redeemed_by, redeemed_at, created_at")
         .order("created_at", { ascending: false }).limit(250);
       if (error) throw error;
-      return json({ codes: data ?? [] });
+      const redeemerIds = [...new Set((data ?? []).map((row) => row.redeemed_by).filter((id): id is string => Boolean(id)))];
+      const { data: redeemerProfiles, error: redeemerError } = redeemerIds.length
+        ? await admin.from("omax_profiles").select("user_id, display_name").in("user_id", redeemerIds)
+        : { data: [], error: null };
+      if (redeemerError) throw redeemerError;
+      return json({ codes: (data ?? []).map((row) => ({
+        ...row,
+        redeemed_by_name: redeemerProfiles?.find((profile) => profile.user_id === row.redeemed_by)?.display_name ?? null,
+      })) });
     }
 
     if (action === "generate_codes") {
