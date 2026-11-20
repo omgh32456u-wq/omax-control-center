@@ -17,7 +17,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
       - name: Install dependencies
         run: npm install --no-audit --no-fund
       - name: Typecheck
@@ -25,5 +24,5 @@ jobs:
       - name: Build web app
         env:
           VITE_SUPABASE_URL: https://biwcwwxsauineaowreot.supabase.co
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_SUPABASE_ANON_KEY: sb_publishable_qDAFSNM5vXuEFEh6ma7Xaw_Se8DCQQu
         run: npm run build
