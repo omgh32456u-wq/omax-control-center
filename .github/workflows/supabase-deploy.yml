@@ -17,6 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Pin the CLI version so setup-cli never has to resolve the latest release.
       - name: Set up Supabase CLI
         uses: supabase/setup-cli@v1
         with:
