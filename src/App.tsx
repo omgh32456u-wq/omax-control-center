@@ -69,7 +69,7 @@ function LoginScreen({ onSignedIn }: { onSignedIn: (session: Session) => void })
       {Array.from({ length: 18 }, (_, i) => <span key={i}>{i % 2 ? '0100101' : '1011010'}</span>)}
     </div>
     <section className="auth-card">
-      <div className="auth-brand"><div className="brand-mark">O</div><div><strong>Omax</strong><span>CONTROL CENTER</span></div></div>
+      <div className="auth-brand"><div className="brand-mark"><img src="/omax-mark.svg" alt="Omax logo" /></div><div><strong>Omax</strong><span>CONTROL CENTER</span></div></div>
       <div className="auth-icon"><ShieldCheck size={23}/></div>
       <div className="eyebrow">RESTRICTED WORKSPACE</div>
       <h1>Admin sign in</h1>
@@ -223,7 +223,7 @@ function Dashboard({ session, onSignOut }: { session: Session; onSignOut: () => 
 
   return <div className={dark ? 'shell' : 'shell light-shell'}>
     <aside className="sidebar">
-      <div className="brand"><div className="brand-mark">O</div><div><strong>Omax</strong><span>CONTROL CENTER</span></div></div>
+      <div className="brand"><div className="brand-mark"><img src="/omax-mark.svg" alt="Omax logo" /></div><div><strong>Omax</strong><span>CONTROL CENTER</span></div></div>
       <div className="workspace-label">WORKSPACE</div>
       <nav>{nav.map(({ label, icon: Icon }) => <button className={`nav-item ${page === label ? 'active' : ''}`} key={label} onClick={() => { setPage(label); setSearch(''); setNotice(''); }}>
         <Icon size={18}/><span>{label}</span>
@@ -243,7 +243,7 @@ function Dashboard({ session, onSignOut }: { session: Session; onSignOut: () => 
           <button className="icon-btn" onClick={() => void loadPage()} aria-label="Refresh"><RefreshCw size={17}/></button>
         </div>
       </header>
-      <section className="content">
+      <section className="content page-transition" key={page}>
         <div className="heading-row"><div><div className="eyebrow">ADMINISTRATION</div><h1>{page}</h1>
           <p className="subtitle">{page === 'Overview' ? 'Your secure workspace for activation and subscription management.' : `Manage Omax ${page.toLowerCase()} from this workspace.`}</p></div>
           {page === 'Activation codes' && <button className="primary" onClick={() => document.getElementById('code-generator')?.scrollIntoView({ behavior: 'smooth' })}><Plus size={17}/> Generate codes</button>}
