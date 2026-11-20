@@ -143,10 +143,18 @@ Deno.serve(async (req) => {
 
     if (action === "list_subscriptions") {
       const { data, error } = await admin.from("omax_subscriptions")
-        .select("id, user_id, activation_code_id, status, tier, starts_at, expires_at, created_at, omax_profiles(display_name)")
+        .select("id, user_id, activation_code_id, status, tier, starts_at, expires_at, created_at")
         .order("created_at", { ascending: false }).limit(250);
       if (error) throw error;
-      return json({ subscriptions: data ?? [] });
+      const ids = [...new Set((data ?? []).map((row) => row.user_id))];
+      const { data: profiles, error: profileError } = ids.length
+        ? await admin.from("omax_profiles").select("user_id, display_name").in("user_id", ids)
+        : { data: [], error: null };
+      if (profileError) throw profileError;
+      return json({ subscriptions: (data ?? []).map((row) => ({
+        ...row,
+        display_name: profiles?.find((profile) => profile.user_id === row.user_id)?.display_name ?? null,
+      })) });
     }
 
     if (action === "list_users") {
