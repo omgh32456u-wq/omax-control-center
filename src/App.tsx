@@ -131,6 +131,7 @@ function Dashboard({ session, onSignOut }: { session: Session; onSignOut: () => 
   const [tier, setTier] = useState<'standard' | 'premium'>('standard');
   const [assignedName, setAssignedName] = useState('');
   const [notes, setNotes] = useState('');
+  const [customCode, setCustomCode] = useState('');
   const [generatedCodes, setGeneratedCodes] = useState<string[]>([]);
   const [search, setSearch] = useState('');
   const [dark, setDark] = useState(true);
@@ -165,9 +166,10 @@ function Dashboard({ session, onSignOut }: { session: Session; onSignOut: () => 
     event.preventDefault(); setBusy(true); setError(''); setNotice(''); setGeneratedCodes([]);
     try {
       const data = await adminRequest<{ codes: string[] }>('generate_codes', {
-        count: Number(count), durationMonths: Number(duration), tier, assignedName, notes,
+        count: customCode.trim() ? 1 : Number(count), durationMonths: Number(duration), tier, assignedName, notes,
+        ...(customCode.trim() ? { customCodes: [customCode.trim()] } : {}),
       });
-      setGeneratedCodes(data.codes ?? []);
+      setGeneratedCodes(data.codes ?? []); setCustomCode('');
       setNotice('Codes created. Copy or save them now — the original code text is shown only once.');
       await loadPage('Activation codes');
     } catch (e) { setError(e instanceof Error ? e.message : 'Code generation failed.'); }
@@ -278,6 +280,7 @@ function Dashboard({ session, onSignOut }: { session: Session; onSignOut: () => 
               <label>Duration<select value={duration} onChange={e => setDuration(e.target.value)}><option value="1">1 month</option><option value="2">2 months</option><option value="12">12 months</option></select></label>
               <label>Subscription tier<select value={tier} onChange={e => setTier(e.target.value as 'standard' | 'premium')}><option value="standard">Standard</option><option value="premium">Premium</option></select></label>
               <label>Assigned to<input value={assignedName} onChange={e => setAssignedName(e.target.value)} maxLength={120} placeholder="Optional person / customer name" /></label>
+              <label>Custom code (optional)<input value={customCode} onChange={e => setCustomCode(e.target.value.toUpperCase())} maxLength={48} placeholder="Leave empty for random" /></label>
               <label className="wide-field">Internal notes<input value={notes} onChange={e => setNotes(e.target.value)} maxLength={500} placeholder="Optional notes" /></label>
               <button className="primary" type="submit" disabled={busy}><Plus size={16}/> Generate securely</button>
             </form>
