@@ -14,7 +14,7 @@ type Page = 'Overview' | 'Activation codes' | 'Subscriptions' | 'Users' | 'Activ
 type CodeRow = {
   id: string; assigned_name: string | null; notes: string | null; duration_months: number;
   tier: 'standard' | 'premium'; is_active: boolean; redeemed_by: string | null;
-  redeemed_at: string | null; created_at: string;
+  redeemed_at: string | null; redeemed_by_name?: string | null; created_at: string;
 };
 type SubscriptionRow = {
   id: string; user_id: string; display_name: string | null; status: string;
@@ -292,7 +292,7 @@ function Dashboard({ session, onSignOut }: { session: Session; onSignOut: () => 
           </section>
           <div className="table-toolbar"><div><h2>Code inventory</h2><p>Up to 250 latest codes</p></div><div className="search-box"><Search size={15}/><input placeholder="Search name, ID, tier…" value={search} onChange={e => setSearch(e.target.value)} /></div></div>
           <div className="table-wrap"><table><thead><tr><th>Assigned to</th><th>Tier</th><th>Duration</th><th>Status</th><th>Created</th><th>Redeemed by</th><th>Redeemed at</th><th>Actions</th></tr></thead>
-            <tbody>{filteredCodes.map(code => <tr key={code.id}><td><strong>{code.assigned_name || 'Unassigned'}</strong><small>{code.id.slice(0, 8)}…</small></td><td><span className={`pill ${code.tier}`}>{code.tier}</span></td><td>{code.duration_months} mo.</td><td><span className={`pill ${code.redeemed_by ? 'used' : code.is_active ? 'active' : 'disabled'}`}>{code.redeemed_by ? 'Used' : code.is_active ? 'Available' : 'Disabled'}</span></td><td>{date(code.created_at)}</td><td>{code.redeemed_by ? code.redeemed_by.slice(0, 12) + '…' : '—'}</td><td>{date(code.redeemed_at)}</td><td><button className="table-action" onClick={() => void updateCode(code)} title="Edit metadata" disabled={!!code.redeemed_by}><Pencil size={14}/></button><button className="table-action" onClick={() => void toggleCode(code)} title={code.is_active ? 'Deactivate' : 'Activate'} disabled={!!code.redeemed_by}><Ban size={14}/></button></td></tr>)}
+            <tbody>{filteredCodes.map(code => <tr key={code.id}><td><strong>{code.assigned_name || 'Unassigned'}</strong><small>{code.id.slice(0, 8)}…</small></td><td><span className={`pill ${code.tier}`}>{code.tier}</span></td><td>{code.duration_months} mo.</td><td><span className={`pill ${code.redeemed_by ? 'used' : code.is_active ? 'active' : 'disabled'}`}>{code.redeemed_by ? 'Used' : code.is_active ? 'Available' : 'Disabled'}</span></td><td>{date(code.created_at)}</td><td>{code.redeemed_by ? (code.redeemed_by_name || code.redeemed_by.slice(0, 12) + '…') : '—'}</td><td>{date(code.redeemed_at)}</td><td><button className="table-action" onClick={() => void updateCode(code)} title="Edit metadata" disabled={!!code.redeemed_by}><Pencil size={14}/></button><button className="table-action" onClick={() => void toggleCode(code)} title={code.is_active ? 'Deactivate' : 'Activate'} disabled={!!code.redeemed_by}><Ban size={14}/></button></td></tr>)}
             {filteredCodes.length === 0 && <tr><td colSpan={8} className="empty-cell">No activation codes found.</td></tr>}</tbody></table></div>
         </>}
 
